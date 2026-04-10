@@ -1,8 +1,12 @@
 package com.example;
 import java.net.*;
+import java.awt.FlowLayout;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+
+import javax.swing.JFrame;
+import javax.swing.JTextField;
 
 /**
  * This program is a server that takes connection requests on
@@ -19,7 +23,19 @@ public class ChatServerWithThreads {
 
     public static final int LISTENING_PORT = 9876;
 
+    // Precondition: None
+    // Postcondition: Server listens on port 9876 or shuts down on error
     public static void main(String[] args) {
+        
+        // JFrame frame = new JFrame("TextBoxes");
+        // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // frame.setSize(300, 100);
+        // frame.setLayout(new FlowLayout()); 
+        // JTextField textField1 = new JTextField(100); 
+        // JTextField textField2 = new JTextField(100);
+        // frame.add(textField1);
+        // frame.add(textField2);
+        // frame.setVisible(true);
 
         ServerSocket listener;  // Listens for incoming connections.
         Socket connection;      // For communication with the connecting program.
@@ -34,7 +50,6 @@ public class ChatServerWithThreads {
                 // Accept next connection request and handle it.
                 ConnectionHandler h = new ConnectionHandler(connection);
                 h.start();
-                 
             }
         }
         catch (Exception e) {
@@ -55,6 +70,8 @@ public class ChatServerWithThreads {
         Socket client;
         ObjectOutputStream oos; //you'll need to define this one for when you're ready to talk back to the client!
         ObjectInputStream ois;
+        // Precondition: socket is a valid Socket object
+        // Postcondition: ConnectionHandler initialized with socket, streams set up, added to handlers
         ConnectionHandler(Socket socket) {
             client = socket;
    
@@ -63,12 +80,13 @@ public class ChatServerWithThreads {
             }
             handlers.add(this);
             try{
-            oos = new ObjectOutputStream(socket.getOutputStream());
+            oos = new ObjectOutputStream(client.getOutputStream());
             ois = new ObjectInputStream(client.getInputStream());
             }
             catch(Exception e){}
-           
         }
+        // Precondition: ConnectionHandler is properly initialized
+        // Postcondition: Handles client messages until disconnect or error occurs
         public void run() {
             String clientAddress = client.getInetAddress().toString();
             while(true) {
@@ -81,6 +99,10 @@ public class ChatServerWithThreads {
                         System.out.println("closing connection");
                         break;
                        
+                    }
+                    for(ConnectionHandler h: handlers){
+                        h.oos.writeObject(message);
+                        h.oos.flush();
                     }
                 }
                 catch(EOFException e){

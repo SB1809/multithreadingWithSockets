@@ -7,7 +7,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import javax.swing.*; 
-import java.awt.*; 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener; 
 
 
 public class SocketClientExample {
@@ -23,7 +25,18 @@ public class SocketClientExample {
      *  ****HINT**** you may wish to have a thread be in charge of sending information
      *  and another thread in charge of receiving information.
     */
+    // Precondition: None
+    // Postcondition: GUI displayed, connected to server on port 9876, listening for messages
     public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException, InterruptedException{
+        JFrame frame = new JFrame("TextBoxes");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300, 100);
+        frame.setLayout(new FlowLayout()); 
+        JTextField textField1 = new JTextField(100); 
+        JTextField textField2 = new JTextField(100);
+        frame.add(textField1);
+        frame.add(textField2);
+        frame.setVisible(true);
         //get the localhost IP address, if server is running on some other IP, you need to use that
         InetAddress host = InetAddress.getLocalHost();
         Socket socket = new Socket(host.getHostName(), 9876);
@@ -31,28 +44,28 @@ public class SocketClientExample {
         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
         ObjectOutputStream   oos = new ObjectOutputStream(socket.getOutputStream());
         Scanner input = new Scanner(System.in);
-        String line ="";
-        while(!(line = input.nextLine()).equals("disconnect")){
-            oos.writeObject(line);
-            oos.flush();
-       
+        textField1.addActionListener(new ActionListener() {
+
+            // Precondition: e is a valid ActionEvent
+            // Postcondition: Text from textField1 sent to server via oos
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO Auto-generated method stub
+                String line = textField1.getText();
+                try {
+                    oos.writeObject(line);
+                    oos.flush();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            
+            }
+            
+        });
+        while(true){
+            textField2.setText(textField2.getText()+"\n\n"+(String) ois.readObject());
         }
 
-//
-       
-            JFrame frame = new JFrame("TextBoxes");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(300, 100);
-            frame.setLayout(new FlowLayout()); 
-            JTextField textField1 = new JTextField(100); 
-            JTextField textField2 = new JTextField(100);
-            frame.add(textField1);
-            frame.add(textField2);
-            frame.setVisible(true);
-        
-//
-
-        socket.shutdownOutput();
-        System.out.println("connection closed!");
     }
 }
